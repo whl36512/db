@@ -6,7 +6,7 @@ use r2d2_postgres::postgres::types::{ ToSql};
 //use rustc_serialize::json::Json ;
 //use serde_json::{ to_string}  ;
 use serde_json  ;
-use constants;
+use super::constants;
 
 
 type PConnection = PooledConnection<PostgresConnectionManager> ;
@@ -64,18 +64,18 @@ pub fn db_conn(pool: & PPool) -> PConnection
     conn 
 }
 
-pub fn runsql (pool: & PPool , sql: &str, params: & [& ToSql]) ->  Vec<Json>
+pub fn runsql (pool: & PPool , sql: &str, params: & [& dyn ToSql]) ->  Vec<Json>
 {
     let conn = db_conn (pool);
     runsql_conn(&conn, sql, params, 2) 
 }
-pub fn runsql_one_row (conn: & PConnection , sql: &str, params: & [& ToSql]) ->  Option<Json>  {
+pub fn runsql_one_row (conn: & PConnection , sql: &str, params: & [& dyn ToSql]) ->  Option<Json>  {
     let mut rows=runsql_conn(conn, sql, params, 1);
     if rows.len() == 1 { return  Some(rows.remove(0))}
     else {return None} ;
     //rows.map(|mut v|v.remove(0))
 }
-pub fn runsql_conn (conn: & PConnection , sql: &str, params: & [& ToSql], _expected_count: u32) 
+pub fn runsql_conn (conn: & PConnection , sql: &str, params: & [& dyn ToSql], _expected_count: u32) 
     ->  Vec<Json>  {
     //alway return json. sql must generate json
 
