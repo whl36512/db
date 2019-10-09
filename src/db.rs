@@ -28,26 +28,38 @@ impl DbUrl {
     {
     //let url="postgres://user:pass@host:port/database?arg1=val1&arg2=val2"
         if self.connection_string == "" {
-        self.connection_string           = format!("postgres://{}:{}@{}:{}/{}"         , self.user, self.passwd,   self.host, self.port, self.database) ;
-        self.connection_string_no_passwd = format!("postgres://{}:password@{}:{}/{}"   , self.user,                self.host, self.port, self.database) ;
+			self.connection_string           = format!("postgres://{}:{}@{}:{}/{}"         
+													, self.user, self.passwd
+													, self.host
+													, self.port
+													, self.database) ;
+			self.connection_string_no_passwd = format!("postgres://{}:password@{}:{}/{}"   
+													, self.user
+													, self.host
+													, self.port
+													, self.database) ;
         }
+    	info!("201808061048 db::DbUrl::make_connection_string() Connecting to database {}"
+				, self.connection_string_no_passwd);
     }
+
+	pub fn default () -> Self {
+    	let default_db_url = DbUrl {
+			  port							: constants::PG_PORT.to_string()
+        	, host							: constants::PG_HOST.to_string()
+        	, user							: constants::PG_USER.to_string()
+        	, passwd						: constants::PG_PASSWD.to_string()
+        	, database						: constants::PG_DATABASE.to_string()
+        	, connection_string 			: constants::EMPTY_STRING.to_string()
+        	, connection_string_no_passwd	: constants::EMPTY_STRING.to_string()
+    	};
+		default_db_url
+	}
 }
 
 pub fn db_pool(db_url : Option<DbUrl>)  -> PPool {
-    let default_db_url = DbUrl {
-          port        : constants::PG_PORT.to_string()
-        , host        : constants::PG_HOST.to_string()
-        , user        : constants::PG_USER.to_string()
-        , passwd      : constants::PG_PASSWD.to_string()
-        , database    : constants::PG_DATABASE.to_string()
-        , connection_string : constants::EMPTY_STRING.to_string()
-        , connection_string_no_passwd : constants::EMPTY_STRING.to_string()
-    };
-
-    let mut db_url=db_url.unwrap_or(default_db_url);
+    let mut db_url=db_url.unwrap_or(DbUrl::default());
     db_url.make_connection_string() ;
-    info!("201808061048 db_pool() Connecting to database {}", db_url.connection_string_no_passwd);
     let manager = PostgresConnectionManager::new(db_url.connection_string, TlsMode::None).unwrap() ;
     let pool  = Pool::builder()
         .max_size(5)
